@@ -6,7 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = { version =  "1.0.66" }
+anyhow = { version = "1.0.66" }
+async-trait = { version = "0.1.59" }
 btleplug = { version = "0.10.4" }
 clap = { version = "4.0.27", features = ["derive"] }
 futures = { version = "0.3.25" }

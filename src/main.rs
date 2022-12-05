@@ -1,14 +1,16 @@
+use std::future::Future;
 use std::str::FromStr;
 
 use anyhow::Ok;
-use btleplug::api::{
-    Central, Manager, Peripheral, ScanFilter,
-};
-use futures::stream::StreamExt;
+use btleplug::api::{Central, Manager, Peripheral, ScanFilter};
 use clap::Parser;
-use log::info;
+use futures::stream::StreamExt;
+use log::{error, info};
+
+use crate::tests::{AdvertisingServiceCharacteristicsTest, BleTest, ServiceListTest};
 
 mod flash;
+mod tests;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -20,6 +22,7 @@ struct Args {
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
+    // Set up logger.
     let logger = pretty_env_logger::formatted_builder()
         .filter_level(log::LevelFilter::Debug)
         .build();
@@ -29,11 +32,18 @@ async fn main() -> Result<(), anyhow::Error> {
 
     info!("Logger initialised.");
 
+    // Parse command line arguments.
     let args = Args::parse();
 
     if let Some(library_path) = args.library_path {
         flash::flash(library_path)?;
     }
+
+    // Prepare test list.
+    let tests: [Box<dyn BleTest>; 2] = [
+        Box::new(ServiceListTest {}),
+        Box::new(AdvertisingServiceCharacteristicsTest {}),
+    ];
 
     // Scan for test device.
     let manager = btleplug::platform::Manager::new().await?;
@@ -43,17 +53,15 @@ async fn main() -> Result<(), anyhow::Error> {
     info!("Scanning for test device...");
     adapter
         .start_scan(ScanFilter {
-            services: vec![uuid::Uuid::from_str("fafafafafafafafafafafafafafafafa").unwrap()],
+            services: vec![uuid::Uuid::from_str("46548881-E7D9-4DE1-BBB7-DB016F1C657D").unwrap()],
         })
         .await?;
 
     let mut events = adapter.events().await?;
     while let Some(event) = events.next().await {
         if let btleplug::api::CentralEvent::DeviceDiscovered(uuid) = event {
-
             info!("Found device with UUID: {}", uuid);
 
-        
             let device: btleplug::platform::Peripheral = loop {
                 let devices = adapter.peripherals().await?;
                 if let Some(device) = devices.iter().find(|d| d.id() == uuid) {
@@ -70,13 +78,34 @@ async fn main() -> Result<(), anyhow::Error> {
 
             device.connect().await?;
 
-            info!("Connected to device.");
+            info!("Connected to device. Starting tests...");
 
-            info!("Discovering services...");
+            let total_tests = tests.len();
+            let mut passed_tests = 0;
+            let mut failed_tests = 0;
 
-            device.discover_services().await?;
+            for test in tests {
+                info!("Running test \"{}\".", test.name());
+                let result = test.run(&device).await;
+                if let Err(e) = result {
+                    error!("Test \"{}\" failed: {}", test.name(), e);
+                    failed_tests += 1;
+                } else {
+                    info!("Test \"{}\" passed.", test.name());
+                    passed_tests += 1;
+                }
+            }
 
-            info!("Discovered services.");
+            info!(
+                "Tests complete. {}/{} passed, {}/{} failed.",
+                passed_tests, total_tests, failed_tests, total_tests
+            );
+
+            return if failed_tests > 0 {
+                Err(anyhow::anyhow!("Tests failed."))
+            } else {
+                Ok(())
+            };
         }
     }
 

@@ -19,13 +19,13 @@ checksum = "216261ddc8289130e551ddcd5ce8a064710c0d064a4d2895c67151c92b5443f6"
 
 [[package]]
 name = "async-trait"
-version = "0.1.58"
+version = "0.1.59"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e805d94e6b5001b651426cf4cd446b1ab5f319d27bab5c644f61de0a804360c"
+checksum = "31e6e93155431f3931513b243d371981bb2770112b370c82745a1d19d2f99364"
 dependencies = [
- "proc-macro2",
- "quote",
- "syn",
+    "proc-macro2",
+    "quote",
+    "syn",
 ]
 
 [[package]]
@@ -61,14 +61,15 @@ checksum = "0d8c1fef690941d3e7788d328517591fecc684c084084702d6ff1641e993699a"
 name = "bluedroid-testbench"
 version = "0.1.0"
 dependencies = [
- "anyhow",
- "btleplug",
- "clap",
- "futures",
- "log",
- "pretty_env_logger",
- "tokio",
- "uuid",
+    "anyhow",
+    "async-trait",
+    "btleplug",
+    "clap",
+    "futures",
+    "log",
+    "pretty_env_logger",
+    "tokio",
+    "uuid",
 ]
 
 [[package]]

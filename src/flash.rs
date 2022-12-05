@@ -18,7 +18,7 @@ pub fn flash(library_path: String) -> Result<(), anyhow::Error> {
         .arg("espflash")
         .arg("flash")
         .arg("--example")
-        .arg("server")
+        .arg("testbench_dut")
         .arg("--release")
         .arg("--baud")
         .arg("921600")
