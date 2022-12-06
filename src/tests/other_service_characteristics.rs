@@ -5,10 +5,10 @@ use btleplug::api::{CharPropFlags, Peripheral};
 
 use crate::tests::BleTest;
 
-pub struct AdvertisingServiceCharacteristicsTest {}
+pub struct OtherServiceCharacteristicsTest {}
 
 #[async_trait::async_trait]
-impl BleTest for AdvertisingServiceCharacteristicsTest {
+impl BleTest for OtherServiceCharacteristicsTest {
     fn name(&self) -> &'static str {
         "Advertising service characteristics"
     }
@@ -17,13 +17,14 @@ impl BleTest for AdvertisingServiceCharacteristicsTest {
         peripheral.discover_services().await?;
         let services = peripheral.services();
 
-        // Check the content of the advertised service.
+        // Check the content of the other service.
         let service = services
             .iter()
             .find(|s| {
-                s.uuid == uuid::Uuid::from_str("46548881-E7D9-4DE1-BBB7-DB016F1C657D").unwrap()
+                s.uuid == uuid::Uuid::from_str("2BC08F60-17EB-431B-BEE7-329518164CD1").unwrap()
             })
             .unwrap();
+
         let characteristics = service
             .characteristics
             .iter()
@@ -37,47 +38,47 @@ impl BleTest for AdvertisingServiceCharacteristicsTest {
         );
         ensure!(
             characteristics
-                .contains(&uuid::Uuid::from_str("AF679F91-7239-402A-813D-55B5367E4A29").unwrap()),
-            "Expected to find characteristic 46548881-E7D9-4DE1-BBB7-DB016F1C657D, found {:?}",
+                .contains(&uuid::Uuid::from_str("6482DF69-A273-4F69-BADC-18583BA9A523").unwrap()),
+            "Expected to find characteristic 6482DF69-A273-4F69-BADC-18583BA9A523, found {:?}",
             characteristics
         );
         ensure!(
             characteristics
-                .contains(&uuid::Uuid::from_str("22E32A0E-1D8D-4300-B0DF-F996E44E65D3").unwrap()),
-            "Expected to find characteristic 2BC08F60-17EB-431B-BEE7-329518164CD1, found {:?}",
+                .contains(&uuid::Uuid::from_str("B0D2A14A-8205-4E07-9317-DC7D61951473").unwrap()),
+            "Expected to find characteristic B0D2A14A-8205-4E07-9317-DC7D61951473, found {:?}",
             characteristics
         );
 
-        let static_characteristic = service
+        let notifying_characteristic = service
             .characteristics
             .iter()
             .find(|c| {
-                c.uuid == uuid::Uuid::from_str("AF679F91-7239-402A-813D-55B5367E4A29").unwrap()
+                c.uuid == uuid::Uuid::from_str("6482DF69-A273-4F69-BADC-18583BA9A523").unwrap()
             })
             .unwrap();
 
-        let expected_props = CharPropFlags::READ;
+        let expected_props = CharPropFlags::READ | CharPropFlags::NOTIFY;
         ensure!(
-            static_characteristic.properties == expected_props,
+            notifying_characteristic.properties == expected_props,
             "Expected characteristic properties to be {:?}, found {:?}",
             expected_props,
-            static_characteristic.properties
+            notifying_characteristic.properties
         );
 
-        let writable_characteristic = service
+        let indicating_characteristic = service
             .characteristics
             .iter()
             .find(|c| {
-                c.uuid == uuid::Uuid::from_str("22E32A0E-1D8D-4300-B0DF-F996E44E65D3").unwrap()
+                c.uuid == uuid::Uuid::from_str("B0D2A14A-8205-4E07-9317-DC7D61951473").unwrap()
             })
             .unwrap();
 
-        let expected_props = CharPropFlags::READ | CharPropFlags::WRITE_WITHOUT_RESPONSE;
+        let expected_props = CharPropFlags::READ | CharPropFlags::INDICATE;
         ensure!(
-            writable_characteristic.properties == expected_props,
+            indicating_characteristic.properties == expected_props,
             "Expected characteristic properties to be {:?}, found {:?}",
             expected_props,
-            writable_characteristic.properties
+            indicating_characteristic.properties
         );
 
         Ok(())

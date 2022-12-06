@@ -1,4 +1,3 @@
-use std::future::Future;
 use std::str::FromStr;
 
 use anyhow::Ok;
@@ -7,7 +6,7 @@ use clap::Parser;
 use futures::stream::StreamExt;
 use log::{error, info};
 
-use crate::tests::{AdvertisingServiceCharacteristicsTest, BleTest, ServiceListTest};
+use crate::tests::{AdvertisingServiceCharacteristicsTest, BleTest, OtherServiceCharacteristicsTest, ServiceListTest, WriteWithoutResponseStressTest};
 
 mod flash;
 mod tests;
@@ -24,11 +23,11 @@ struct Args {
 async fn main() -> Result<(), anyhow::Error> {
     // Set up logger.
     let logger = pretty_env_logger::formatted_builder()
-        .filter_level(log::LevelFilter::Debug)
+        .filter_level(log::LevelFilter::Info)
         .build();
 
     log::set_boxed_logger(Box::new(logger)).unwrap();
-    log::set_max_level(log::LevelFilter::Trace);
+    log::set_max_level(log::LevelFilter::Info);
 
     info!("Logger initialised.");
 
@@ -40,9 +39,11 @@ async fn main() -> Result<(), anyhow::Error> {
     }
 
     // Prepare test list.
-    let tests: [Box<dyn BleTest>; 2] = [
+    let tests: [Box<dyn BleTest>; 4] = [
         Box::new(ServiceListTest {}),
         Box::new(AdvertisingServiceCharacteristicsTest {}),
+        Box::new(OtherServiceCharacteristicsTest {}),
+        Box::new(WriteWithoutResponseStressTest {}),
     ];
 
     // Scan for test device.
