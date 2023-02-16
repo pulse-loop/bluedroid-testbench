@@ -13,5 +13,5 @@ clap = { version = "4.0.27", features = ["derive"] }
 futures = { version = "0.3.25" }
 log = { version = "0.4.17" }
 pretty_env_logger = { version = "0.4.0" }
-tokio = { version = "1.23.1", features = ["full"] }
+tokio = { version = "1.24.2", features = ["full"] }
 uuid = { version = "1.2.2" } 
